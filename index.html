@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Language Learning Fun App 🎓🌟</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(to right, #fef6e4, #e1f7f5);
+    }
+    .avatar-section img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      animation: bounce 2s infinite;
+      border-radius: 50%;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #d1f7c4;
+      color: #000;
+      padding: 10px 20px;
+      border: 2px solid #1e6;
+      border-radius: 10px;
+      z-index: 1000;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .bounce {
+      animation: bounce 2s infinite;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">🌟 Language App</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="achievements.html">Achievements</a></li>
+          <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="text-center mb-4">
+      <h2 class="bounce">Select Your Guide 🧸</h2>
+      <select class="form-select w-auto d-inline-block" id="avatarSelect" onchange="changeAvatar()">
+        <option value="fox">Foxy 🦊</option>
+        <option value="panda">Panda 🐼</option>
+        <option value="owl">Owl 🦉</option>
+      </select>
+      <div class="my-3 avatar-section">
+        <img id="avatarImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Fox_in_a_field.jpg/320px-Fox_in_a_field.jpg" alt="Avatar" class="rounded-circle">
+      </div>
+    </div>
+
+    <div class="text-center mb-4">
+      <label for="languageSelect" class="form-label">🌐 Choose Language:</label>
+      <select class="form-select w-auto d-inline-block" id="languageSelect" onchange="changeLanguage()">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="es">Spanish</option>
+      </select>
+    </div>
+
+    <h4 class="text-center mb-3" id="userGreeting">Welcome, Learner! 🌍</h4>
+
+    <div class="row text-center mb-4">
+      <div class="col">
+        <p>Lessons Completed: <span id="lessonsCompleted">0</span></p>
+        <p>Points: <span id="points">0</span></p>
+        <p>Achievements: <span id="achievements">None</span></p>
+        <p>🔥 Streak: <span id="streak">0</span> days</p>
+        <button class="btn btn-success" onclick="completeLesson()">Complete Lesson</button>
+      </div>
+    </div>
+
+    <div class="card text-center mb-3 bounce">
+      <div class="card-body">
+        <h5 class="card-title">🔒 Level 2: Unlock at 50 Points</h5>
+        <button class="btn btn-primary" onclick="unlockLevel(2)">Try Unlock</button>
+      </div>
+    </div>
+
+    <div class="card text-center mb-3 bounce">
+      <div class="card-body">
+        <p><strong>Translate: Hello</strong></p>
+        <button class="btn btn-outline-primary m-1" onclick="checkAnswer('Hola')">Hola</button>
+        <button class="btn btn-outline-primary m-1" onclick="checkAnswer('Bonjour')">Bonjour</button>
+        <button class="btn btn-outline-primary m-1" onclick="checkAnswer('Ciao')">Ciao</button>
+      </div>
+    </div>
+
+    <div class="card text-center mb-3">
+      <div class="card-body">
+        <h5 class="card-title">✍️ Write Task</h5>
+        <input type="text" class="form-control mb-2" id="writeAnswer" placeholder="Type 'Hello' in Spanish">
+        <button class="btn btn-warning" onclick="checkWriteTask()">Submit</button>
+      </div>
+    </div>
+
+    <div class="card text-center mb-3">
+      <div class="card-body">
+        <h5 class="card-title">🎤 Speak Task</h5>
+        <button class="btn btn-info" onclick="startSpeechTask()">Start Speaking</button>
+        <p class="mt-2">Your answer: <span id="speechResult"></span></p>
+      </div>
+    </div>
+    <div class="text-center mb-4">
+      <h3>🏆 Your Progress</h3>
+      <div class="progress" style="height: 20px;">
+        <div class="progress-bar bg-success" role="progressbar" style="width: 60%;">60%</div>
+      </div>
+    <div id="popup" class="popup">🎉 New Achievement Unlocked!</div>
+  </div>
+
+  <script>
+    let lessonsCompleted = parseInt(localStorage.getItem('lessonsCompleted')) || 0;
+    let points = parseInt(localStorage.getItem('points')) || 0;
+    let streak = parseInt(localStorage.getItem('streak')) || 0;
+    let lastCompletedDate = localStorage.getItem('lastCompleted') || null;
+
+    function completeLesson() {
+      const today = new Date().toLocaleDateString();
+      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString();
+      if (lastCompletedDate !== today) {
+        streak = (lastCompletedDate === yesterday) ? streak + 1 : 1;
+        lastCompletedDate = today;
+      }
+      lessonsCompleted++;
+      points += 10;
+      updateAchievements();
+      localStorage.setItem('lessonsCompleted', lessonsCompleted);
+      localStorage.setItem('points', points);
+      localStorage.setItem('streak', streak);
+      localStorage.setItem('lastCompleted', lastCompletedDate);
+      document.getElementById('lessonsCompleted').innerText = lessonsCompleted;
+      document.getElementById('points').innerText = points;
+      document.getElementById('streak').innerText = streak;
+    }
+
+    function updateAchievements() {
+      const achievements = document.getElementById('achievements');
+      if (points >= 100) {
+        achievements.innerText = 'Advanced Badge 🥇';
+      } else if (points >= 60) {
+        achievements.innerText = 'Intermediate Badge 🎖️';
+      } else if (points >= 30) {
+        achievements.innerText = 'Beginner Badge 🏅';
+      } else {
+        achievements.innerText = 'None';
+      }
+      localStorage.setItem('achievements', achievements.innerText);
+      showPopup();
+    }
+
+    function checkAnswer(answer) {
+      if (answer === 'Hola') {
+        alert('✅ Correct!');
+        points += 5;
+        updateAchievements();
+        localStorage.setItem('points', points);
+        document.getElementById('points').innerText = points;
+      } else {
+        alert('❌ Try Again!');
+      }
+    }
+
+    function checkWriteTask() {
+      const userAnswer = document.getElementById('writeAnswer').value.trim().toLowerCase();
+      if (userAnswer === 'hola') {
+        alert('✅ Correct Write Task!');
+        points += 10;
+        updateAchievements();
+        localStorage.setItem('points', points);
+        document.getElementById('points').innerText = points;
+      } else {
+        alert('❌ Try Again!');
+      }
+    }
+
+    function unlockLevel(levelNum) {
+      if (levelNum === 2 && points >= 50) {
+        alert('🔓 Level 2 Unlocked! 🎉');
+      } else {
+        alert('🚫 Not enough points!');
+      }
+    }
+
+    function showPopup() {
+      const popup = document.getElementById('popup');
+      popup.style.display = 'block';
+      setTimeout(() => popup.style.display = 'none', 3000);
+    }
+
+    function changeAvatar() {
+      const selected = document.getElementById('avatarSelect').value;
+      const avatarImage = document.getElementById('avatarImage');
+      if (selected === 'panda') {
+        avatarImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Grosser_Panda.JPG/320px-Grosser_Panda.JPG';
+      } else if (selected === 'owl') {
+        avatarImage.src = '://wwwhttps.shutterstock.com/image-vector/owls-typically-have-round-faces-600nw-2456186377.jpg';
+      } else {
+        avatarImage.src = 'https://media.istockphoto.com/id/1172956360/vector/cute-cartoon-fox.jpg?s=612x612&w=0&k=20&c=sWLILsIU71A0HHvA_DceGZkDPtf-RHdyU7e3zFh5NR0=';
+      }
+    }
+
+    function changeLanguage() {
+      const selectedLang = document.getElementById('languageSelect').value;
+      const greeting = document.getElementById('userGreeting');
+      if (selectedLang === 'hi') {
+        greeting.innerText = 'स्वागत है, शिक्षार्थी! 🌍';
+      } else if (selectedLang === 'es') {
+        greeting.innerText = '¡Bienvenido, estudiante! 🌍';
+      } else {
+        greeting.innerText = 'Welcome, Learner! 🌍';
+      }
+    }
+
+    function startSpeechTask() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Speech recognition not supported');
+        return;
+      }
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.onresult = function(event) {
+        const result = event.results[0][0].transcript.trim().toLowerCase();
+        document.getElementById('speechResult').innerText = result;
+        if (result === 'hola') {
+          alert('✅ Correct Speech Task!');
+          points += 10;
+          updateAchievements();
+          localStorage.setItem('points', points);
+          document.getElementById('points').innerText = points;
+        } else {
+          alert('❌ Try Again!');
+        }
+      };
+      recognition.start();
+    }
+
+    // Initial Load
+    document.getElementById('lessonsCompleted').innerText = lessonsCompleted;
+    document.getElementById('points').innerText = points;
+    document.getElementById('streak').innerText = streak;
+    document.getElementById('achievements').innerText = localStorage.getItem('achievements') || 'None';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
